@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:screenOrientation="landscape"
+    android:weightSum="1">
+    <FrameLayout
+        android:id="@+id/camera_preview"
+        android:layout_width="match_parent"
+        android:layout_height="304dp"
+        android:layout_weight="1.00" />
+
+    <Button
+        android:id="@+id/button_capture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="Capture" />
+    <!--<activity android:name=".CameraActivity"-->
+        <!--android:label="@string/app_name"-->
+
+        <!--android:screenOrientation="landscape">-->
+
+        <!--&lt;!&ndash;<intent-filter>&ndash;&gt;-->
+            <!--&lt;!&ndash;<action android:name="android.intent.action.MAIN" />&ndash;&gt;-->
+            <!--&lt;!&ndash;<category android:name="android.intent.category.LAUNCHER" />&ndash;&gt;-->
+        <!--&lt;!&ndash;</intent-filter>&ndash;&gt;-->
+    <!--</activity>-->
+</LinearLayout>
