@@ -24,7 +24,7 @@ public class ShapeExtractor extends ProcessingTask {
 
     @Override
     protected Object doInBackground(Object[] objects) {
-        Log.d("Task", "ShapeExtractor");
+//        Log.d("Task", "ShapeExtractor");
         Bitmap image = (Bitmap) objects[0];
         imageView = (ImageView) objects[1];
         tasks = (LinkedList<AsyncTask>) objects[2];

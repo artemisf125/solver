@@ -129,7 +129,7 @@ public class ShapeIdentifier extends ProcessingTask {
         for (CoOrdinate pos:shape) {
             map[pos.x][pos.y] = true;
         }
-        if (shape.size() > 500){
+        if (shape.size() > 200){ // was 500
             int colour = newColour();
             for (CoOrdinate pos:shape) {
                 newImage.setPixel(pos.x, pos.y, colour);

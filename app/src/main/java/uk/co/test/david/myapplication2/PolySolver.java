@@ -15,6 +15,7 @@ public class PolySolver extends AsyncTask {
 
     public LinkedList<Polygon> polygons;
     public ImageView imageView;
+    public double boardSize;
 
     public PolySolver(ImageView imageView, LinkedList<Polygon> polygons){
         this.imageView = imageView;
@@ -28,33 +29,98 @@ public class PolySolver extends AsyncTask {
         return null;
     }
 
-    public void solve(){
-        while (polygons.size() > 1) {
-            LinkedList<PolyMatch> matches = new LinkedList<>();
-            for (Polygon poly : polygons) {
-                for (Polygon poly2 : polygons) {
-                    if (poly == poly2) {
-                        continue;
-                    }
-                    PolyMatch res = poly.findMatches(poly2);
-                    matches.push(res);
-                    Log.d("Matches", "" + res.p1 + "," + res.p2 + "," + res.start1 + "," + res.start2 + ":" + res.length);
-                }
+    public void solve() {
+//        while (polygons.size() > 1) {
+//            LinkedList<PolyMatch> matches = new LinkedList<>();
+//            for (Polygon poly : polygons) {
+//                for (Polygon poly2 : polygons) {
+//                    if (poly == poly2) {
+//                        continue;
+//                    }
+//                    PolyMatch res = poly.findMatches(poly2);
+//                    matches.push(res);
+//                    Log.d("Matches", "" + res.p1 + "," + res.p2 + "," + res.start1 + "," + res.start2 + ":" + res.length);
+//                }
+//            }
+//            Collections.sort(matches);
+//            PolyMatch match = matches.getFirst();
+//            Log.d("Matches", "" + match.p1 + "," + match.p2 + "," + match.start1 + "," + match.start2 + ":" + match.length);
+//            Polygon result = match.getResult();
+//            updateImage(match.p1, match.p2, result);
+//            polygons.remove(match.p1);
+//            polygons.remove(match.p2);
+//            polygons.push(result);
+//            try {
+//                Thread.sleep(2000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
+        double totalArea = 0;
+        for (Polygon polygon:polygons){
+            totalArea += polygon.getArea();
+        }
+        this.boardSize = Math.sqrt(totalArea);
+        for (Polygon p:polygons){
+            Log.d("Longest",""+p.longestLine());
+        }
+        Log.d("BoardSize",""+boardSize);
+        solve(polygons);
+        Log.d("Solver","solver terminated");
+    }
+
+    public boolean solve(LinkedList<Polygon> polygons) {
+        LinkedList<PolyMatch> matches = getMatches(polygons);
+//        Log.d("Matches:", "" + matches.size());
+        for (PolyMatch match : matches) {
+            Polygon newPiece = match.getResult();
+            LinkedList<Polygon> newPieces = (LinkedList<Polygon>)polygons.clone();
+            newPieces.remove(match.p1);
+            newPieces.remove(match.p2);
+            newPieces.add(newPiece);
+            updateImage(match.p1,match.p2,newPiece);
+//                try {Thread.sleep(200);} catch (Exception e){}
+//            Log.d("Longest",""+newPiece.longestLine());
+            if (newPiece.isInvalid() || newPiece.longestLine() > boardSize*1.1) {
+//                Log.d("Solver","Invalid");
+//                try {Thread.sleep(1000);} catch (Exception e){}
+                continue;
+            } else {
+//                Log.d("Solver","Valid");
+//                try {Thread.sleep(5000);} catch (Exception e){}
             }
-            Collections.sort(matches);
-            PolyMatch match = matches.getFirst();
-            Log.d("Matches", "" + match.p1 + "," + match.p2 + "," + match.start1 + "," + match.start2 + ":" + match.length);
-            Polygon result = match.getResult();
-            updateImage(match.p1, match.p2, result);
-            polygons.remove(match.p1);
-            polygons.remove(match.p2);
-            polygons.push(result);
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+//            Log.d("size",""+newPieces.size() + "," + polygons.size());
+            if (finished(newPieces)){
+                Log.d("Solver","Finished!");
+                return true;
+            }
+            boolean solved = solve(newPieces);
+            if (solved) {
+                return true;
             }
         }
+        return false;
+    }
+
+    public LinkedList<PolyMatch> getMatches(LinkedList<Polygon> polygons) {
+        LinkedList<PolyMatch> matches = new LinkedList<>();
+        for (Polygon poly : polygons) {
+            for (Polygon poly2 : polygons) {
+                if (poly == poly2) {
+                    continue;
+                }
+//                PolyMatch res = poly.findMatches(poly2);
+                matches.addAll(poly.findMatches(poly2));
+//                Log.d("Matches", "" + res.p1 + "," + res.p2 + "," + res.start1 + "," + res.start2 + ":" + res.length);
+            }
+        }
+        Collections.sort(matches);
+        return matches;
+    }
+
+    public boolean finished(LinkedList<Polygon> polygons){
+        return polygons.size() == 1;
+    }
 
 
 
@@ -123,7 +189,7 @@ public class PolySolver extends AsyncTask {
 //        Log.d("Angles",a);
 //        updateImage(match.p1,match.p2,match.getResult());
 //        Log.d("atan",""+atan(1,0)+","+atan(1,1)+","+atan(0,1)+","+atan(-1,1)+","+atan(-1,0)+","+atan(-1,-1)+","+atan(0,-1)+","+atan(1,-1));
-    }
+//    }
 
     private double atan(double x, double y){
         return ((Math.atan2(y,x)+Math.PI*2)%(Math.PI*2))*180/Math.PI;

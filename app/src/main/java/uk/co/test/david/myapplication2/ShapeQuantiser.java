@@ -105,4 +105,20 @@ public class ShapeQuantiser extends ProcessingTask {
         return shapeImage;
     }
 
+//    @Override
+//    public void onPostExecute(Object o){
+//        Bitmap newImage = (Bitmap) o;
+//        Log.d("App", "Displaying new Image");
+//        imageView.setImageBitmap(newImage);
+//        try { Thread.sleep(2000); } catch (Exception e) {}
+//        if (tasks.size() == 0){
+//            Solver solver = new Solver(imageView, true, 0, 0, 0);
+//            solver.execute();
+//            return;
+//        }
+//        AsyncTask nextTask = tasks.removeFirst();
+//        Object[] objects = {newImage, imageView, tasks, returnMap};
+//        nextTask.execute(objects);
+//    }
+
 }

@@ -27,10 +27,17 @@ public abstract class ProcessingTask extends AsyncTask {
     @Override
     protected void onPostExecute(Object o) {
         Bitmap newImage = (Bitmap) o;
-        Log.d("App", "Displaying new Image");
+//        Log.d("App", "Displaying new Image");
         imageView.setImageBitmap(newImage);
 //        try { Thread.sleep(2000); } catch (Exception e) {}
         if (tasks.size() == 0){
+//            if (MainActivity.cornersBox.isChecked()){
+//                Solver solver = new Solver(imageView,true,0,0,0);
+//                solver.execute();
+//            } else {
+//                PolySolver solver = new PolySolver(imageView, MainActivity.Polygons.polygons);
+//                solver.execute();
+//            }
             return;
         }
         AsyncTask nextTask = tasks.removeFirst();

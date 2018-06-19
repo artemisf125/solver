@@ -30,6 +30,7 @@ class PolyDisplayer extends AsyncTask {
     protected Object doInBackground(Object[] objects) {
         Polygon[] polys = (Polygon[]) objects;
         LinkedList<int[]>[] points = new LinkedList[polys.length];
+        double scale = 1;
         for (int i = 0; i < polys.length; i++) {
             points[i] = new LinkedList<>();
             int minx = 0;
@@ -40,12 +41,12 @@ class PolyDisplayer extends AsyncTask {
             points[i].addLast(pos);
             int[] lastPos = pos;
             double angle = 0;
-            Log.d("PolySize",""+polys[i].size);
+//            Log.d("PolySize",""+polys[i].size);
             for (int j = 0; j < polys[i].size; j++) {
                 angle += polys[i].angles[j];
                 int nextX = lastPos[0] + (int)(polys[i].lengths[j]*Math.cos(angle));
                 int nextY = lastPos[1] + (int)(polys[i].lengths[j]*Math.sin(angle));
-                Log.d("next",""+nextX+","+nextY);
+//                Log.d("next",""+nextX+","+nextY);
                 if (nextX > maxx){
                     maxx = nextX;
                 }
@@ -63,43 +64,73 @@ class PolyDisplayer extends AsyncTask {
                 lastPos = nextPos;
             }
             int rangex = maxx-minx;
-            Log.d("rangex",""+rangex);
+//            Log.d("rangex",""+rangex);
             double scalex = 100.0/rangex;
-            Log.d("scalex",""+scalex);
+//            Log.d("scalex",""+scalex);
             int rangey = maxy-miny;
-            Log.d("rangey",""+rangey);
+//            Log.d("rangey",""+rangey);
             double scaley = 100.0/rangey;
-            Log.d("scaley",""+scaley);
+//            Log.d("scaley",""+scaley);
+            if (scalex > scaley){
+                scalex = scaley;
+            } else {
+                scaley = scalex;
+            }
+            if (scale > scalex){
+                scale = scalex;
+            }
             for (int[] point:points[i]){
                 point[0] -= minx;
                 point[1] -= miny;
-                point[0] *= scalex;
-                point[1] *= scaley;
-                Log.d("Point",""+point[0]+","+point[1]);
+//                point[0] *= scalex;
+//                point[1] *= scaley;
+//                Log.d("Point",""+point[0]+","+point[1]);
             }
-            Log.d("PolySize","after: " + points[i].size());
+//            Log.d("PolySize","after: " + points[i].size());
+        }
+        for (int i = 0; i < polys.length; i++) {
+            for (int j = 0; j < points[i].size(); j++){
+                points[i].get(j)[0] *= scale;
+                points[i].get(j)[1] *= scale;
+            }
         }
         Bitmap bitmap = Bitmap.createBitmap(300,100, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         Paint paint = new Paint();
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.BLACK);
+        Paint paint2 = new Paint();
+        paint2.setStyle(Paint.Style.STROKE);
+        paint2.setColor(Color.RED);
         canvas.drawRect(0,0,299,99,paint);
         paint.setColor(Color.WHITE);
-        Log.d("PolySize",""+polys.length);
+//        Log.d("PolySize",""+polys.length);
         for (int i = 0; i < polys.length; i++) {
             Path path = new Path();
-            Log.d("PolySize","size: " + points[i].size());
+            Path path2 = new Path();
+//            Log.d("PolySize","size: " + points[i].size());
             for (int j = 0; j < points[i].size(); j++) {
                 int[] p = points[i].get(j);
                 if (j == 0) {
                     path.moveTo(p[0] + i * 100, p[1]);
+                    path2.moveTo(p[0] + i * 100, p[1]);
                 } else {
                     path.lineTo(p[0] + i * 100, p[1]);
+                    path2.lineTo(p[0] + i * 100, p[1]);
                 }
-                Log.d("Point",""+(p[0]+i*100)+","+p[1]);
+//                Log.d("Point",""+(p[0]+i*100)+","+p[1]);
             }
+            canvas.drawPath(path2, paint2);
             canvas.drawPath(path, paint);
+            for (int j = 0; j < points[i].size()-1; j++) {
+                int[] p = points[i].get(j);
+                int colour = polys[i].colours[(j+1)%polys[i].colours.length];
+                setPixel(bitmap, p[0] + i * 100, p[1],colour);
+                setPixel(bitmap, p[0] + 1 + i * 100, p[1],colour);
+                setPixel(bitmap, p[0] - 1 + i * 100, p[1],colour);
+                setPixel(bitmap, p[0] + i * 100, p[1] + 1,colour);
+                setPixel(bitmap, p[0] + i * 100, p[1] - 1,colour);
+            }
         }
         return bitmap;
     }
@@ -109,5 +140,15 @@ class PolyDisplayer extends AsyncTask {
 //        Log.d("Solver", "Displaying new Image");
         imageView.setImageBitmap(newImage);
         running = false;
+    }
+
+    private void setPixel(Bitmap bitmap, int x, int y, int colour){
+        if (x >= 0 && x < bitmap.getWidth() && y >= 0 && y < bitmap.getHeight()) {
+            bitmap.setPixel(x, y, colour);
+        }
+    }
+
+    protected int getEncodedColour(int R, int G, int B) {
+        return (255 & 0xff) << 24 | (R & 0xff) << 16 | (G & 0xff) << 8 | (B & 0xff);
     }
 }

@@ -38,7 +38,7 @@ public class Piece {
             }
         }
         rotations = shapes.size();
-        Log.d("Rotations",""+rotations);
+//        Log.d("Rotations",""+rotations);
     }
 
     public boolean[][] getRotation(int i){

@@ -1,11 +1,15 @@
 package uk.co.test.david.myapplication2;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.shapes.Shape;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.ImageView;
 
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -27,6 +31,10 @@ public class Solver extends AsyncTask {
     int max = 0;
     boolean[] placed;
     public boolean finished = false;
+    private boolean fail = false;
+    private String failMessage = "";
+    int boardWidth;
+    int boardHeight;
 
     private static final int EMPTY = -1;
     private static final int TEMPFORSCORING = -2;
@@ -53,19 +61,42 @@ public class Solver extends AsyncTask {
             colours[i+1] = getEncodedColour(255, rand.nextInt(255)+1,rand.nextInt(255)+1,rand.nextInt(255)+1);
             placed[i] = false;
         }
-        int boardWidth;
-        int boardHeight;
+        Random rand = new Random();
         int totalPieceArea = MainActivity.Shapes.getTotalPieceArea();
-        int size = (int)Math.sqrt(totalPieceArea);
+        double size = Math.sqrt(totalPieceArea);
+//        int required = Integer.parseInt(MainActivity.problemName.split("_")[1].split("x")[0]);
+//        Log.d("Size - Required", "" + size + " - " + required);
+//        if (size != required){
+//            fail = true;
+//            failMessage = "Size Mismatch -  Found:" + size + ", Required: " + required;
+//            if (size > required){
+//                MainActivity.tests.addFirst(new FileLoader(imageView, MainActivity.problemName, MainActivity.QuantisationCalculator.tolerance*(rand.nextDouble()/2+0.5)*2));
+//            } else {
+//                MainActivity.tests.addFirst(new FileLoader(imageView, MainActivity.problemName, MainActivity.QuantisationCalculator.tolerance/((rand.nextDouble()/2+0.5)*2)));
+//            }
+//        }
         if (containerWidth != 0){
             boardWidth = containerWidth;
         } else {
-            boardWidth = size;
+            boardWidth = (int)size;
         }
         if (containerHeight != 0){
             boardHeight = containerHeight;
         } else {
-            boardHeight = size;
+            boardHeight = (int)size;
+        }
+        board = new int[boardWidth][boardHeight];
+        for (int x = 0; x < board.length; x++){
+            for (int y = 0; y < board[0].length; y++){
+                board[x][y] = EMPTY;
+            }
+        }
+    }
+
+    private void reinit(){
+        placed = new boolean[pieces.size()];
+        for (int i = 0; i < pieces.size(); i++){
+            placed[i] = false;
         }
         board = new int[boardWidth][boardHeight];
         for (int x = 0; x < board.length; x++){
@@ -77,19 +108,46 @@ public class Solver extends AsyncTask {
 
     @Override
     protected Object doInBackground(Object[] objects) {
+//        try {Thread.sleep(2000);}catch(Exception e){}
+//        if (fail){
+////            Log.d("Failure","Test Failed");
+//            String[] result = {MainActivity.problemName,"Failed! - " + failMessage};
+//            MainActivity.results.addLast(result);
+//            return null;
+//        }
+//        try {Thread.sleep(2000);}catch (Exception e){};
         Log.d("Solver","Solving...");
-        Log.d("SolverTimer","Start");
-        finished = solve(0);
-        Log.d("SolverTimer","Stop");
+        if (ShapeDisplayer.running){
+            Log.d("Solver","Shape displayer already running!");
+        }
+//        Log.d("SolverTimer","Start");
+//        for (int iteration = 0; iteration < 5; iteration++) {
+//            reinit();
+//            long start = System.currentTimeMillis();
+//            Collections.shuffle(pieces);
+            finished = solve(0);
+//            long timeTaken = System.currentTimeMillis() - start;
+//            String[] result = {MainActivity.problemName, "" + timeTaken};
+//            Log.d("Results:",result[0] + " - " + result[1]);
+//            MainActivity.results.addLast(result);
+//        }
+//        Log.d("SolverTimer","Stop");
+//        MainActivity.printResults();
+//        MainActivity.running = false;
         return null;
     }
 
     @Override
     protected void onPostExecute(Object o) {
-//        Bitmap newImage = (Bitmap) o;
-//        Log.d("App", "Displaying new Image");
-//        imageView.setImageBitmap(newImage);
-        MainActivity.solveButton.setText("Solved!");
+        Bitmap newImage = (Bitmap) o;
+        Log.d("App", "Displaying new Image");
+        imageView.setImageBitmap(newImage);
+//        MainActivity.solveButton.setText("Solved!");
+        if (MainActivity.tests.size() == 0){
+            MainActivity.printResults();
+        } else {
+            MainActivity.tests.removeFirst().execute();
+        }
     }
 //
 //    private boolean solve(int nextPiece){
@@ -130,8 +188,8 @@ public class Solver extends AsyncTask {
 //        return false;
 //    }
     private boolean solve(int nextPiece){
-        if (isCancelled())
-            return false;
+//        if (isCancelled())
+//            return false;
         //        try {
         //            Thread.sleep(100);
         //        } catch (Exception e){
@@ -149,7 +207,7 @@ public class Solver extends AsyncTask {
             Object[] o = {board,colours};
             displayer.execute(o);
             MainActivity.solutions++;
-            Log.d("Solved!2", "Solutions: " + MainActivity.solutions);
+//            Log.d("Solved!2", "Solutions: " + MainActivity.solutions);
             printBoard();
             return true;
         }
@@ -165,8 +223,8 @@ public class Solver extends AsyncTask {
             }
         });
         for (Move move:moves){
-            if (isCancelled())
-                return false;
+//            if (isCancelled())
+//                return false;
             for (Move m:move.otherRequirements){
 //                Log.d("Solver","Inserting Other requirement, piece " + m.shapeNumber);
                 insertPieceWithoutUpdate(m.x,m.y,m.r,m.shapeNumber, pieces.get(m.shapeNumber));
@@ -174,12 +232,12 @@ public class Solver extends AsyncTask {
             insertPiece(move.x,move.y,move.r,nextPiece,piece);
             if (nextPiece == pieces.size()-1){
                 // Finished?
-                Log.d("Solver","Finished");
+//                Log.d("Solver","Finished");
                 ShapeDisplayer displayer = new ShapeDisplayer(imageView);
                 Object[] o = {board,colours};
                 displayer.execute(o);
                 MainActivity.solutions++;
-                Log.d("Solved!", "Solutions: " + MainActivity.solutions);
+//                Log.d("Solved!", "Solutions: " + MainActivity.solutions);
                 printBoard();
                 return true;
             } else if (solve(nextPiece+1)){
@@ -487,6 +545,7 @@ public class Solver extends AsyncTask {
         }
         ShapeDisplayer.running = true;
 //        Log.d("Drawing Image",""+updates);
+        Log.d("Solver","Drawing Image");
         ShapeDisplayer displayer = new ShapeDisplayer(imageView);
 //        displayer.execute();
 
@@ -524,7 +583,7 @@ public class Solver extends AsyncTask {
                 }
                 s += board[x][y];
             }
-            Log.d("Board",s);
+//            Log.d("Board",s);
         }
     }
 //    private boolean unfillableSquare(int shapeNumber){
@@ -570,6 +629,9 @@ public class Solver extends AsyncTask {
 //    }
 
     private LinkedList<Move> unfillableSquare(int shapeNumber){
+        if (shapeNumber >= pieces.size()-1){
+            return new LinkedList<>();
+        }
         int[][] reached = new int[board.length][board[0].length];
         for (int x = 0; x < reached.length; x++){
             for (int y = 0; y < reached[0].length; y++){
@@ -732,7 +794,7 @@ public class Solver extends AsyncTask {
                 return null;
             }
         }
-        reqs = new LinkedList<>();
+//        LinkedList reqs = new LinkedList<>();
         return reqs;
     }
 

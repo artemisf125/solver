@@ -28,7 +28,7 @@ public class ShapeDisplayer extends AsyncTask {
         this.board = (int[][]) objects[0];
         this.colours = (int[])objects[1];
         running = true;
-//        Log.d("Solver", "Trying to display new Image");
+        Log.d("Solver", "Trying to display new Image");
         int scale = 5;
         int width = board.length;
         int height = board[0].length;

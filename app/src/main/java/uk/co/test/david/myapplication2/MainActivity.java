@@ -34,6 +34,9 @@ import android.graphics.Color;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+
+import java.nio.file.Path;
+import java.util.Date;
 import java.util.LinkedList;
 
 import android.hardware.camera2.*;
@@ -50,18 +53,32 @@ public class MainActivity extends Activity {
     public static EditText containerWidth;
     public static EditText containerHeight;
     public static EditText missingPieces;
-    public static String Url = "https://writelatex.s3.amazonaws.com/hrxywfmmqywm/uploads/1/24904902/6.bmp?X-Amz-Expires=14400&X-Amz-Date=20180526T180953Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJF667VKUK4OW3LCA/20180526/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=3d2b9a9a7b3ec7545fd36741a58b236c79c4bbce283e891d9989ad2242cd461e";
+//    public static String Url = "https://writelatex.s3.amazonaws.com/hrxywfmmqywm/uploads/1/24904902/6.bmp?X-Amz-Expires=14400&X-Amz-Date=20180526T180953Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJF667VKUK4OW3LCA/20180526/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=3d2b9a9a7b3ec7545fd36741a58b236c79c4bbce283e891d9989ad2242cd461e";
 //    public static String Url = "https://writelatex.s3.amazonaws.com/zqmkcwksysvp/uploads/985/19552918/1.jpg?X-Amz-Expires=14400&X-Amz-Date=20180520T133700Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJF667VKUK4OW3LCA/20180520/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=5a83cd54026355140d959423ead4446c69b08f90408b4bccd44cc69955757531";
+    public static String Url = "file:///Downalods/test/newpuzzle.jpg";
     public static int solutions = 0;
+    public static LinkedList<String[]> results = new LinkedList<>();
+    public static boolean running = false;
+    public static String problemName;
+    public static LinkedList<FileLoader> tests = new LinkedList<>();
 
     public Uri mImageUri;
     public Bitmap image;
     public ImageView imageView;
 
+    public static void printResults(){
+        Log.d("Results:","");
+        for (String[] result:results){
+            Log.d("Results:",result[0] + " - " + result[1]);
+        }
+        Log.d("Results:","");
+    }
+
     public static class QuantisationCalculator{
         public static LinkedList<Integer> lengths;
-        private static int size = -1;
-        private static double tolerance = 0.2;
+        public static int size = -1;
+        public static double tolerance = 0.1;
+        public static final double defaultTolerance = 0.1;
 
         public QuantisationCalculator() {
              lengths = new LinkedList<>();
@@ -81,6 +98,9 @@ public class MainActivity extends Activity {
                 if (l < smallestNumber){
                     smallestNumber = l;
                 }
+            }
+            for (int l:lengths){
+                Log.d("QuantisationCalculator","length: "+l);
             }
             while(testNumber <= (smallestNumber*(1+tolerance))){
                 Log.d("QuantisationCalculator","trying "+testNumber);
@@ -329,89 +349,98 @@ public class MainActivity extends Activity {
         tasks.addLast(new EdgeFinder());
         tasks.addLast(new GaussianBlur());
         tasks.addLast(new HoleFiller());
-        tasks.addLast(new BackgroundFiller(0,0,white));
+        tasks.addLast(new BackgroundFiller(10,10,white));
         tasks.addLast(new ShapeIdentifier());
 
-        AsyncTask task = new AsyncTask() {
-            @Override
-            protected Bitmap doInBackground(Object[] objects) {
-                try {
-                    Log.d("App", "Loading");
-//                    URL url = new URL("https://www.doc.ic.ac.uk/~mjw03/PersonalWebpage/Pics/puzzle.jpg");
-                    URL url = new URL(Url);
-                    URLConnection connection = url.openConnection();
-//                    connection.setDoOutput(true);
-//                    connection.connect();
-//                    connection.getContent();
-//                    Log.d("App", streamToString(connection.getInputStream()));
-//                    Log.d("App",connection.getContentType());
-//                    Log.d("App",""+connection.getContentLength());
-//                    Thread.sleep(100);
-//                    Log.d("App",""+connection.getContentLength());
-                    Bitmap bmp = BitmapFactory.decodeStream(connection.getInputStream());
-                    Log.d("App", "Got Image");
-                    if (bmp == null){
-                        Log.d("App", "Image is null");
-                    }
-                    return bmp;
-                } catch (MalformedURLException e) {
-                    Log.d("App",e.toString());
-                } catch (IOException e) {
-                    Log.d("App",e.toString());
-                } catch (Exception e){
-                    Log.d("App",e.toString());
-                }
-                Log.d("App", "Failed");
-                return null;
-            }
-                public String streamToString(InputStream is) throws IOException {
-                    StringBuilder sb = new StringBuilder();
-                    BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-                    String line;
-                    while ((line = rd.readLine()) != null) {
-                        sb.append(line);
-                    }
-                    return sb.toString();
-                }
-
-            @Override
-            protected void onPostExecute(Object o) {
-//                super.onPostExecute(o);
-                if (o == null){
-                    Log.d("App", "Image null");
-                } else {
-                    Bitmap image = (Bitmap)o;
-                    Log.d("App", "Displaying Image");
-                    ImageView imageView = (ImageView)findViewById(R.id.iv);
-                    imageView.setImageBitmap(image);
-                    Bitmap newImage = image.copy(image.getConfig(), true);
-                    AsyncTask nextTask = tasks.removeFirst();
-                    Object[] objects = {newImage, imageView, tasks, null};
-                    nextTask.execute(objects);
-//                    GaussianBlur blur = new GaussianBlur();
-//                    Object[] objects = {newImage, imageView};
-//                    blur.execute(objects);
-//                    SobelFilter sobelFilter = new SobelFilter();
-//                    Object[] objects2 = {newImage, imageView};
-//                    sobelFilter.execute(objects2);
-                }
-            }
-            private int[] getColours(int color){
-                int A = (color >> 24) & 0xff; // or color >>> 24
-                int R = (color >> 16) & 0xff;
-                int G = (color >>  8) & 0xff;
-                int B = (color      ) & 0xff;
-                int[] c = {A,R,G,B};
-                return c;
-            }
-            private int getEncodedColour(int[] c){
-                return (c[0] & 0xff) << 24 | (c[1] & 0xff) << 16 | (c[2] & 0xff) << 8 | (c[3] & 0xff);
-            }
-            private int getEncodedColour(int A, int R, int G, int B){
-                return (A & 0xff) << 24 | (R & 0xff) << 16 | (G & 0xff) << 8 | (B & 0xff);
-            }
-        };
-        task.execute();
+//            AsyncTask task = new AsyncTask() {
+//            @Override
+//            protected Bitmap doInBackground(Object[] objects) {
+//                try {
+//                    Log.d("App", "Loading");
+////                    URL url = new URL("https://www.doc.ic.ac.uk/~mjw03/PersonalWebpage/Pics/puzzle.jpg");
+////                    URL url = new URL(Url);
+////                    URLConnection connection = url.openConnection();
+////                    connection.setDoOutput(true);
+////                    connection.connect();
+////                    connection.getContent();
+////                    Log.d("App", streamToString(connection.getInputStream()));
+////                    Log.d("App",connection.getContentType());
+////                    Log.d("App",""+connection.getContentLength());
+////                    Thread.sleep(100);
+////                    Log.d("App",""+connection.getContentLength());
+////                    Bitmap bmp = BitmapFactory.decodeStream(connection.getInputStream());
+//                    String path = android.os.Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath();
+//                    String filename = path + "/test/puzzle.bmp";
+//                    Log.d("image at",filename);
+//                    Bitmap bmp =  BitmapFactory.decodeFile(filename);
+//                    Log.d("App", "Got Image");
+//                    if (bmp == null){
+//                        Log.d("App", "Image is null");
+//                    }
+//                    return bmp;
+//                } catch (Exception e){
+//                    Log.d("App",e.toString());
+//                }
+//                Log.d("App", "Failed");
+//                return null;
+//            }
+//            public String streamToString(InputStream is) throws IOException {
+//                    StringBuilder sb = new StringBuilder();
+//                    BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+//                    String line;
+//                    while ((line = rd.readLine()) != null) {
+//                        sb.append(line);
+//                    }
+//                    return sb.toString();
+//                }
+//
+//            @Override
+//            protected void onPostExecute(Object o) {
+////                super.onPostExecute(o);
+//                if (o == null){
+//                    Log.d("App", "Image null");
+//                } else {
+//                    Bitmap image = (Bitmap)o;
+//                    Log.d("App", "Displaying Image");
+//                    ImageView imageView = (ImageView)findViewById(R.id.iv);
+//                    imageView.setImageBitmap(image);
+//                    Bitmap newImage = image.copy(image.getConfig(), true);
+//                    AsyncTask nextTask = tasks.removeFirst();
+//                    Object[] objects = {newImage, imageView, tasks, null};
+//                    nextTask.execute(objects);
+////                    GaussianBlur blur = new GaussianBlur();
+////                    Object[] objects = {newImage, imageView};
+////                    blur.execute(objects);
+////                    SobelFilter sobelFilter = new SobelFilter();
+////                    Object[] objects2 = {newImage, imageView};
+////                    sobelFilter.execute(objects2);
+//                }
+//            }
+//            private int[] getColours(int color){
+//                int A = (color >> 24) & 0xff; // or color >>> 24
+//                int R = (color >> 16) & 0xff;
+//                int G = (color >>  8) & 0xff;
+//                int B = (color      ) & 0xff;
+//                int[] c = {A,R,G,B};
+//                return c;
+//            }
+//            private int getEncodedColour(int[] c){
+//                return (c[0] & 0xff) << 24 | (c[1] & 0xff) << 16 | (c[2] & 0xff) << 8 | (c[3] & 0xff);
+//            }
+//            private int getEncodedColour(int A, int R, int G, int B){
+//                return (A & 0xff) << 24 | (R & 0xff) << 16 | (G & 0xff) << 8 | (B & 0xff);
+//            }
+//        };
+//        task.execute();
+//        int[][] values = {{5,5},{5,6}};
+//        for (int[] value:values){
+//            for (int i = 1; i <= 4; i++) {
+//                FileLoader test = new FileLoader(imageView,"Puzzle_" + value[0] + "x" + value[0] + "_" + value[1] + "_" + i + "_p.png");
+//                tests.addLast(test);
+//            }
+//        }
+//        tests.removeFirst().execute();
+//        test.execute();
     }
     public static Camera getCameraInstance(){
         Camera c = null;

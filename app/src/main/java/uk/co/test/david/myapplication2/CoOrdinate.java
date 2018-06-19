@@ -15,4 +15,8 @@ public class CoOrdinate {
         this.x = 0;
         this.y = 0;
     }
+
+    public boolean closeTo(CoOrdinate p) {
+        return (Math.pow(x-p.x,2)+Math.pow(y-p.y,2) <= 10);
+    }
 }

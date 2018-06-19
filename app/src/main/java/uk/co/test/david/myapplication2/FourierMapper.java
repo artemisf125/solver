@@ -124,7 +124,7 @@ public class FourierMapper extends ProcessingTask {
             }
         }
         int[] differentials = new int[heights.length];
-        int range = 5;
+        int range = 10;
         for (int i = 0; i < differentials.length; i++){
 //            differentials[i] = 0;
 //            for (int n = -range; n < range; n++){
@@ -151,33 +151,73 @@ public class FourierMapper extends ProcessingTask {
             ddifferentials[i] = differentials[(i + range) % differentials.length] - differentials[(i-range+differentials.length) % differentials.length];
             graph.setPixel(i,rThetaSpace.length/2-((ddifferentials[i])*10/range),getEncodedColour(0,255,0));
         }
-        boolean negative = false;
-        int negativeLength = 0;
+        int[] addifferentials = new int[heights.length];
         int average = 0;
         int averageRange = 5;
         for (int i = -averageRange; i < averageRange; i++){
             average += ddifferentials[(i+ddifferentials.length)%ddifferentials.length];
         }
-        for (int i = 0; i < ddifferentials.length || negative; i++) {
-            average += ddifferentials[(i+averageRange)%ddifferentials.length] - ddifferentials[(i-averageRange+ddifferentials.length)%ddifferentials.length];
-            graph.setPixel(i%ddifferentials.length,rThetaSpace.length/2-((average)/range),getEncodedColour(255,0,255));
-            if (negative){
-                if (average < -2*averageRange){
+        for (int i = 0; i < ddifferentials.length; i++) {
+            average += ddifferentials[(i + averageRange) % ddifferentials.length] - ddifferentials[(i - averageRange + ddifferentials.length) % ddifferentials.length];
+            addifferentials[i] = average/ range;
+            graph.setPixel(i % ddifferentials.length, rThetaSpace.length / 2 - ((average) / range), getEncodedColour(255, 0, 255));
+        }
+        int[] tdifferentials = new int[heights.length];
+        for (int i = 0; i < tdifferentials.length; i++) {
+            tdifferentials[i] = 0;
+//            for (int n = -range; n < range; n++){
+//                if (n >= 0) {
+//                    ddifferentials[i] += differentials[(i + n) % differentials.length];
+//                } else {
+//                    ddifferentials[i] -= differentials[(i+n+heights.length) % differentials.length];
+//                }
+//            }
+            tdifferentials[i] = addifferentials[(i + range) % addifferentials.length] - addifferentials[(i-range+addifferentials.length) % addifferentials.length];
+            graph.setPixel(i,rThetaSpace.length/2-((tdifferentials[i])*2/range),getEncodedColour(0,255,255));
+        }
+        int[] qdifferentials = new int[heights.length];
+        for (int i = 0; i < qdifferentials.length; i++){
+            qdifferentials[i] = 0;
+//            for (int n = -range; n < range; n++){
+//                if (n >= 0) {
+//                    ddifferentials[i] += differentials[(i + n) % differentials.length];
+//                } else {
+//                    ddifferentials[i] -= differentials[(i+n+heights.length) % differentials.length];
+//                }
+//            }
+            qdifferentials[i] = tdifferentials[(i + range) % tdifferentials.length] - tdifferentials[(i-range+tdifferentials.length) % tdifferentials.length];
+            graph.setPixel(i,rThetaSpace.length/2-((qdifferentials[i])*3/range),getEncodedColour(255,255,0));
+        }
+        boolean negative = false;
+        int negativeLength = 0;
+        average = 0;
+        averageRange = 5;
+        for (int i = -averageRange; i < averageRange; i++){
+            average += qdifferentials[(i+qdifferentials.length)%qdifferentials.length];
+        }
+        boolean firstTime = true;
+        for (int i = 0; i < ddifferentials.length*1.1 || negative; i++) {
+            average += qdifferentials[(i+averageRange)%qdifferentials.length] - qdifferentials[(i-averageRange+qdifferentials.length)%qdifferentials.length];
+            graph.setPixel(i%qdifferentials.length,rThetaSpace.length/2-(((average*3)/range)/range),getEncodedColour(100,100,255));
+            if (negative && !firstTime){
+                if (addifferentials[i%addifferentials.length] < 0 && average > 0) {
                     negativeLength++;
                 } else {
                     if (negativeLength > 5) {
                         for (int r = 0; r < rThetaSpace.length; r++) {
-                            graph.setPixel((i-negativeLength/2)%ddifferentials.length, r, getEncodedColour(255, 255, 0));
+                            graph.setPixel((i - negativeLength / 2) % ddifferentials.length, r, getEncodedColour(255, 255, 0));
                         }
-                        corners.addLast(getCoOrdinate(heights[(i-negativeLength/2 + heights.length)%heights.length],i%ddifferentials.length-negativeLength/2));
+                        corners.addLast(getCoOrdinate(heights[(i - negativeLength / 2 + heights.length) % heights.length], i % ddifferentials.length - negativeLength / 2));
                     }
                     negative = false;
                     negativeLength = 0;
                 }
             } else {
-                if (average < -2*averageRange){
+                if (addifferentials[i%addifferentials.length] < 0 && average > 0){
                     negative = true;
                     negativeLength = 0;
+                } else {
+                    firstTime = false;
                 }
             }
         }

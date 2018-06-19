@@ -24,7 +24,7 @@ public class GetShapeTask  extends ProcessingTask {
 
     @Override
     protected Object doInBackground(Object[] objects) {
-        Log.d("Task", "GetShapeTask");
+//        Log.d("Task", "GetShapeTask");
         Bitmap image = (Bitmap) objects[0];
         imageView = (ImageView) objects[1];
         tasks = (LinkedList<AsyncTask>) objects[2];
@@ -55,9 +55,9 @@ public class GetShapeTask  extends ProcessingTask {
     @Override
     protected void onPostExecute(Object o) {
         Bitmap newImage = (Bitmap) o;
-        Log.d("App", "Displaying new Image");
+//        Log.d("App", "Displaying new Image");
         imageView.setImageBitmap(shapeImage);
-//        try { Thread.sleep(4000); } catch (Exception e) {}
+//        try { Thread.sleep(8000); } catch (Exception e) {}
         if (tasks.size() == 0){
             return;
         }
